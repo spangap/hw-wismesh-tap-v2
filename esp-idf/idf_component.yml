@@ -1,0 +1,9 @@
+description: "hw-wismesh-tap-v2: RAK WisMesh TAP V2 board HAL for reticulous (power rails/CS park/battery, Home-button input HAL; display/touch/GNSS via spangap-lcd/gps Kconfig)."
+url: https://github.com/spangap/hw-wismesh-tap-v2
+version: "0.1.0"
+license: "Apache-2.0"
+targets:
+  - esp32s3
+dependencies:
+  idf:
+    version: ">=5.5"
