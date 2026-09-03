@@ -53,9 +53,12 @@ One button, four meanings, all timed here (`kStandbyHoldMs` 300 /
 - press in standby → `sys.standby = 0`, press fully absorbed
 
 The board only flips `sys.standby`; the subscription (`tapStandby`, lcd task)
-does the display sleep/wake via `lcdScreenSleep/Wake`. Touch gating is not
-here: spangap-lcd's controller module watches the same key and discards its
-samples while it is set, so a resting finger can't hold the device awake.
+does the display sleep/wake via `lcdScreenSleep/Wake`. Touch is not here
+either: spangap-lcd's controller module watches the same key, and on this board
+(`CONFIG_LCD_WAKE_ON_TOUCH_DEFAULT=y`) it arms the FT5x06's INT as a second
+light-sleep wake source and clears `sys.standby` on a real finger, swallowing
+that finger so it wakes without pressing anything. With the row turned off it
+discards its samples instead, and the button is the only way back.
 
 The light-sleep wake path is ported from the T-Deck (same GPIO 0, same
 semantics), and its three traps carry over verbatim:
@@ -106,8 +109,8 @@ averaging plus a light EMA.
 
 - **Source-of-truth gaps.** The pin map comes from the board's Meshtastic
   variant cross-checked against MeshCore's bare-RAK3112 variant, not a unit in
-  hand. The four verify-first items (GNSS UART orientation, touch mirroring,
-  panel invert, divider ratio) are listed in README.md.
+  hand. The three verify-first items (GNSS UART orientation, panel invert,
+  divider ratio) are listed in README.md.
 - **GPIO 0 is the BOOT strap.** Holding the Home button through a reset enters
   the ROM downloader — that's the chip, not a bug here.
 - **Two 16 MB touch boards.** The T-Deck and this board both pass the flash

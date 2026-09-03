@@ -34,10 +34,6 @@ unit before an RF or partition run:
   host TX = 43 (what's wired here); MeshCore's bare-module variant names the
   pair the other way round. If the receiver stays silent on real hardware, swap
   `CONFIG_GPS_RX_PIN` / `CONFIG_GPS_TX_PIN` in `straddle.yaml`.
-- **Touch orientation.** The FT5x06 is wired IDENTITY (native coords) and the
-  lcd component applies the panel rotation. If touch comes out mirrored on real
-  hardware, the flags live in the component's controller bring-up
-  ([spangap-lcd](../spangap-lcd) `src/lcd_ui/lcd_touch.cpp`, `tcfg.flags`).
 - **Panel polarity.** `CONFIG_LCD_INVERT_COLOR=y` (the usual ST7789 IPS
   setting). If colours come out negative, flip it.
 - **Battery divider.** The 5/3 ratio is the variant's stated 1.667 multiplier.
@@ -70,8 +66,16 @@ the first access to it.
 
 The Home button's meanings (owned by the input HAL): hold 300 ms → standby,
 one click → launcher (`lcdGoHome`), two clicks → app switcher
-(`lcdShowRecents`), any press in standby → wake. In standby the display is off,
-touch reads are gated, and the button is armed as a light-sleep wake source.
+(`lcdShowRecents`), any press in standby → wake. In standby the display is off
+and the button is armed as a light-sleep wake source.
+
+The glass wakes it too: this is a handheld with its button round the back, so
+`CONFIG_LCD_WAKE_ON_TOUCH_DEFAULT=y` and the `s.lcd.wake_on_touch` Display row
+ships on (a pocket-carried deck ships it off). While it holds, the FT5x06's INT
+is armed as a second light-sleep wake source and a finger on the dark screen
+clears `sys.standby`; that finger is swallowed, so it wakes the device without
+pressing what was left under it. Turn the row off and the Home button is the
+only way back.
 
 The LoRa radio engine, the SD/state filesystem, the GNSS task, the IP/web
 platform and the mesh stack are owned by other straddles
@@ -139,6 +143,7 @@ shared bus; only the CS lines differ.
 | Peripheral | Pins |
 |---|---|
 | FT5x06 touch (I2C0, addr 0x38; `CONFIG_LCD_TOUCH_*`) | SDA 9, SCL 40, INT 39, no reset |
+| ↳ glass laminated 180° to the panel | `CONFIG_LCD_TOUCH_MIRROR_X/_Y=y` |
 | Home button | GPIO 0 (BOOT strap, pulled-up active-low) |
 | Battery sense | GPIO 1 (ADC1), divider 5/3 |
 | GNSS (RAK12501 / Quectel L76K, UART1) | host RX 44 ← GPS TX, host TX 43 → GPS RX |
@@ -170,7 +175,9 @@ published from `straddle.yaml`'s `kconfig:` block:
 
 The board publishes the shared `battery.millivolt` / `battery.percent`
 ephemerals. The touch controller found is published by spangap-lcd as
-`lcd.touch` (shown in Settings → System → Hardware). Runtime LoRa parameters
+`lcd.touch` (shown in Settings → System → Hardware), and its detect threshold
+is a Display slider on this board because the part is an FT5x06
+(`s.lcd.touch_sens`). Runtime LoRa parameters
 live at `s.lora.*` ([iface-lora](../iface-lora)); display settings at `s.lcd.*`
 ([spangap-lcd](../spangap-lcd)); GNSS at `s.gps.*` ([gps](../gps)).
 

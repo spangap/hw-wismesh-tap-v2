@@ -71,6 +71,8 @@ settings:
       - section: "Display"
       - slider: { label: "Backlight",      key: "s.lcd.backlight",          min: 0, max: 255 }
       - integer: { label: "Dim after", unit: "s",  key: "s.lcd.inactivity_timeout", min: 0, max: 120 }
+      - switch: { label: "Wake on touch",  key: "s.lcd.wake_on_touch" }
+      - caption: "Touch the screen to wake it, as well as the Home button."
 
 # Board VALUES, fed to the symbols other straddles / IDF DEFINE through the
 # collected staging/sdkconfig.spangap-fragments. A board straddle is non-
@@ -148,6 +150,16 @@ kconfig:
   - CONFIG_LCD_DC_PIN=42
   - CONFIG_LCD_BL_PIN=41
   - CONFIG_LCD_PCLK_MHZ=40
+  # Draw strip: 8 KB of INTERNAL DMA RAM, stated here because it is a budget
+  # decision about THIS board rather than about panels. This one runs WiFi and
+  # BLE and a LoRa modem and an SD card behind one 320x240 panel, all out of the
+  # same internal heap — and the drivers that come up last are the ones that
+  # find it empty: a radio transfer's DMA bounce, an SPI bus init. 8 KB is what
+  # the display used to hold as two 4 KB buffers, so it costs the board nothing
+  # against a known-good image while giving twice the strip (one buffer is
+  # enough now, the flush being synchronous). Raise it only against a measured
+  # `free`, never against a hope.
+  - CONFIG_LCD_DRAW_STRIP_KB=8
   - CONFIG_LCD_CONTROLLER_ST7789=y
   - CONFIG_LCD_NATIVE_WIDTH=240
   - CONFIG_LCD_NATIVE_HEIGHT=320
@@ -158,10 +170,19 @@ kconfig:
   # reset GPIO routed — the controller resets with the 3V3 rail. The component
   # creates the I2C0 bus itself, which is fine here: touch is the port's only
   # client on this board.
+  # The glass is laminated 180° to the panel: both axes mirror in the native
+  # frame, before the 90° rotation the pixels get. Without them a touch at the
+  # bottom left lands at the top right.
   - CONFIG_LCD_TOUCH_CONTROLLER_FT5X06=y
   - CONFIG_LCD_TOUCH_I2C_SDA=9
   - CONFIG_LCD_TOUCH_I2C_SCL=40
   - CONFIG_LCD_TOUCH_INT_PIN=39
+  - CONFIG_LCD_TOUCH_MIRROR_X=y
+  - CONFIG_LCD_TOUCH_MIRROR_Y=y
+  # The case is a handheld, not a pocket carry, and the Home button is round
+  # the back where a thumb does not fall — so the glass wakes it by default
+  # (s.lcd.wake_on_touch, a Display row; the operator can turn it off).
+  - CONFIG_LCD_WAKE_ON_TOUCH_DEFAULT=y
   # LVGL v9 tuning, matching the platform's other ST7789 board (hw-lilygo-tdeck):
   # 16-bit colour matches the panel; Montserrat 12 for launcher labels; LVGL
   # allocations route through spangap's central policy (LV_USE_CUSTOM_MALLOC).
