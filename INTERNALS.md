@@ -3,7 +3,7 @@
 Maintainer reference for the RAK WisMesh TAP V2 board HAL. For what the straddle
 is and how to build with it, read [README.md](README.md) first.
 
-## 1. Bring-up: two rails, then the CS park, all in the `start:` band
+## 1. Bring-up: two rails, then the chip-select park, all in the `start:` band
 
 `WismeshTapBoard::onStart` ([esp-idf/src/wismeshtap.cpp](esp-idf/src/wismeshtap.cpp))
 runs **before** `spangapInit()`, because the first shared-SPI-bus access is
@@ -17,7 +17,7 @@ then:
    power gate, and iface-lora has no Kconfig symbol for a radio rail —
    `loraInit()` assumes a powered chip. It also runs far too late to do this
    itself relative to nothing in particular, but the rail costs nothing here
-   and makes the following CS park meaningful (an unpowered chip has no
+   and makes the following chip-select park meaningful (an unpowered chip has no
    drivers to park).
 3. **Every shared-bus CS is parked HIGH.** The ST7789 shares the SD card's bus
    (host 3) with no driver owning its CS yet; parked LOW-ish it would drive
